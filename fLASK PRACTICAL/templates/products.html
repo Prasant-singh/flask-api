@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Inventory</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .form-container { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 100px; }
+        input { padding: 5px; width: 200px; }
+        button { padding: 5px 10px; cursor: pointer; margin-right: 5px; }
+        .add-btn { background-color: #4CAF50; color: white; border: none; }
+        .edit-btn { background-color: #2196F3; color: white; border: none; }
+        .delete-btn { background-color: #f44336; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <h1>Product Inventory</h1>
+    
+    <div class="form-container">
+        <h2>Add New Product</h2>
+        <form id="productForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="price">Price:</label>
+                <input type="number" id="price" min="0" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <input type="text" id="category" required>
+            </div>
+            <button type="submit" class="add-btn">Add Product</button>
+        </form>
+    </div>
+
+    <table id="productsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Category</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in initial_products %}
+            <tr data-id="{{ product.id }}">
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>${{ product.price }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.category }}</td>
+                <td>
+                    <button class="edit-btn" onclick="editProduct({{ product.id }})">Edit</button>
+                    <button class="delete-btn" onclick="deleteProduct({{ product.id }})">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        // Add new product
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newProduct = {
+                name: document.getElementById('name').value,
+                price: parseFloat(document.getElementById('price').value),
+                quantity: parseInt(document.getElementById('quantity').value),
+                category: document.getElementById('category').value
+            };
+
+            try {
+                const response = await fetch('/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newProduct)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    addProductToTable(result.product);
+                    document.getElementById('productForm').reset();
+                } else {
+                    alert('Error adding product');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error adding product');
+            }
+        });
+
+        // Add product to table
+        function addProductToTable(product) {
+            const tableBody = document.querySelector('#productsTable tbody');
+            const row = document.createElement('tr');
+            row.setAttribute('data-id', product.id);
+            row.innerHTML = `
+                <td>${product.id}</td>
+                <td>${product.name}</td>
+                <td>$${product.price}</td>
+                <td>${product.quantity}</td>
+                <td>${product.category}</td>
+                <td>
+                    <button class="edit-btn" onclick="editProduct(${product.id})">Edit</button>
+                    <button class="delete-btn" onclick="deleteProduct(${product.id})">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        }
+
+        // Edit product
+        function editProduct(productId) {
+            // Implement edit functionality
+            alert('Edit product with ID: ' + productId);
+        }
+
+        // Delete product
+        async function deleteProduct(productId) {
+            if (!confirm('Are you sure you want to delete this product?')) return;
+            
+            try {
+                const response = await fetch(`/products/${productId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    document.querySelector(`tr[data-id="${productId}"]`).remove();
+                } else {
+                    alert('Error deleting product');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error deleting product');
+            }
+        }
+    </script>
+</body>
+</html>
